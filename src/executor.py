@@ -35,12 +35,10 @@ def run_command(cmd):
     if not cmd or not cmd.strip():
         return 0
     try:
-        # Start the subprocess in its own process group so we can forward signals
         proc = subprocess.Popen(cmd, shell=True, preexec_fn=os.setsid)
         try:
             return proc.wait()
         except KeyboardInterrupt:
-            # Forward Ctrl+C to the child process group
             try:
                 os.killpg(os.getpgid(proc.pid), signal.SIGINT)
             except Exception:
@@ -53,13 +51,6 @@ def run_command(cmd):
 
 
 def interactive_shell(prompt='> '):
-    """Simple interactive shell with history and line-editing.
-
-    - Up/Down arrows work via readline history.
-    - Ctrl+C during input cancels the current prompt.
-    - Ctrl+C while a child is running is forwarded to the child.
-    - Ctrl+D (EOF) or typing `exit`/`quit` exits cleanly and saves history.
-    """
     _setup_readline()
     try:
         while True:
@@ -69,7 +60,6 @@ def interactive_shell(prompt='> '):
                 print()
                 break
             except KeyboardInterrupt:
-                # User pressed Ctrl+C at prompt — show a fresh prompt
                 print()
                 continue
 
@@ -78,7 +68,6 @@ def interactive_shell(prompt='> '):
                 continue
             if line in ("exit", "quit"):
                 break
-            # add to history and run
             try:
                 readline.add_history(line)
             except Exception:
@@ -92,6 +81,5 @@ if __name__ == '__main__':
     try:
         interactive_shell()
     except KeyboardInterrupt:
-        # Ensure a clean exit on Ctrl+C at top-level
         print()
         sys.exit(0)
